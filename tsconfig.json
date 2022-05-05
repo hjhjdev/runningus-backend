@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "lib": ["ES2021"],
+    "allowJs": false,
+    "strict": true, 
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "baseUrl": "src",
+    "paths": {
+      "@assets/*": ["assets/*"],
+      "@controllers/*": ["controllers/*"],
+      "@errors/*": ["errors/*"],
+      "@guards/*": ["guards/*"],
+      "@libraries/*": ["libraries/*"],
+      "@routers/*": ["routers/*"],
+      "@middlewares/*": ["middlewares/*"],
+      "@utilities/*": ["utilities/*"],
+      "@validators/*": ["validators/*"]
+    },
+  },
+  "include": ["src/**/*", "src/middlewares/.auth-jwt.middleware.ts"],
+  "exclude": ["node_modules"],
+  "ts-node": {
+    "files": true
+  },
+}
