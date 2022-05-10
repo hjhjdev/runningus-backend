@@ -6,7 +6,7 @@
     "format": "prettier --write \"**/*.{ts,json,md}\" \"!package*.json\" \"!tsconfig.json\" \"!.eslintrc.json\"",
     "build": "NODE_ENV=production tsc --project tsconfig.json --diagnostics && tsc-alias -p tsconfig.json",
     "prod": "NODE_ENV=production node --experimental-specifier-resolution=node ./app.js",
-    "dev": "NODE_ENV=development nodemon --exec node  -r ts-node/register -r dotenv/config --loader ts-paths-esm-loader --experimental-specifier-resolution=node  ./src/app.ts"
+    "dev": "NODE_ENV=development nodemon --exec node  -r ts-node/register -r dotenv/config --loader ts-paths-esm-loader --experimental-specifier-resolution=node ./src/app.ts"
   },
   "type": "module",
   "dependencies": {
@@ -17,6 +17,7 @@
     "bn.js": "^5.2.0",
     "date-fns": "^2.28.0",
     "dotenv": "^16.0.0",
+    "install": "^0.13.0",
     "joi": "^17.6.0",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.13.4",
