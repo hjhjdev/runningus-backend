@@ -37,7 +37,6 @@ class Database {
   public static async query<T>(sql: Sql, options?: unknown): Promise<DbQueryResult<T>> {
     const connector = Database.getInstance();
     const [result] = await connector.query<DbQueryResult<T>>(sql, options);
-
     return result;
   }
 }
