@@ -37,10 +37,6 @@ class MeetSearchReq {
   public point_x = 0;
 
   public point_y = 0;
-
-  public max_distance = 0;
-
-  public limit = 0;
 }
 
 class MeetJoinReq {
@@ -105,13 +101,15 @@ export class MeetingController {
 
     // MEET 테이블을 입력받은 거리 내로 조회
     try {
-      const point = `POINT(${req.point_y}, ${req.point_x})`;
+        // const MAX_DISTANCE = 5000,
+        // const LIMIT = 10
+        const point = `POINT(${req.point_y}, ${req.point_x})`;
 
-      const dbResult = await Database.query(
-        `SELECT *, ST_DISTANCE_SPHERE(${point}, POINT) AS DIST FROM MEET 
-                WHERE st_distance_sphere(Point(127.1210368, 37.3817369), point) < ${req.max_distance}
-                ORDER BY DIST
-                LIMIT ${req.limit}`,
+        const dbResult = await Database.query(
+            `SELECT *, ST_DISTANCE_SPHERE(${point}, POINT) AS DIST FROM MEET
+            ORDER BY DIST`
+            // WHERE st_distance_sphere(Point(127.1210368, 37.3817369), point) < ${MAX_DISTANCE}
+            // LIMIT ${LIMIT}
       );
 
       api.printConsole(' Meet Search 성공');
@@ -136,20 +134,66 @@ export class MeetingController {
     }
 
     try {
-      await Database.query(`INSERT INTO LIST (MEET_ID, USER_ID) VALUE (${req.user_id}, ${req.meet_id})`);
-      await Database.query(
-        `INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.user_id}, ${req.meet_id}, 00, '[Meeting 조인]')`,
-      );
-      api.printConsole(' Meet Join 성공');
-      return (ctx.body = api.returnSuccessRequest('미팅 참여에 성공하였습니다.'));
+        // MEET이 존재하는지 검사
+        const dbResult1 : any = await Database.query(`SELECT UID FROM MEET WHERE UID = ${req.meet_id}`);
+        if (dbResult1[0] === undefined) {
+            api.printConsole('Meet Join 실패 - 미팅이 존재하지 않습니다.');
+            ctx.response.status = 403;
+            return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '미팅이 존재하지 않습니다.'));
+        }
+
+        // LIST에 값이 있는지 검사
+        const dbResult2 : any = await Database.query(`SELECT UID FROM LIST WHERE MEET_ID = ${req.meet_id} AND USER_ID = ${req.user_id} `);
+        if (dbResult2[0] !== undefined) {
+            api.printConsole('Meet Join 실패 - 이미 존재하는 릴레이션 입니다.');
+            ctx.response.status = 403;
+            return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '이미 존재하는 릴레이션 입니다.'));
+        }
+
+        await Database.query(`INSERT INTO LIST (MEET_ID, USER_ID) VALUE (${req.meet_id}, ${req.user_id})`);
+        await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.user_id}, ${req.meet_id}, 00, '[Meeting 조인]')`,);
+        api.printConsole(' Meet Join 성공');
+        return (ctx.body = api.returnSuccessRequest('미팅 참여에 성공하였습니다.'));
     } catch (err: any) {
-      api.printConsole(' Meet Search api DB Insert 오류');
-      ctx.response.status = 400;
-      return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
+        api.printConsole(' Meet join api DB Insert 오류');
+        ctx.response.status = 400;
+        return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
     }
   }
+    // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 미팅 참여 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
-  // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 미팅 참여 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
+
+    // ===================================미팅 퇴장 api=======================================
+    public static async quitMeeting(ctx: Context) {
+        // api 유효성 검사
+        const req = ctx.request.body;
+        if (api.checkValidation(new MeetJoinReq(), req) === false) {
+            api.printConsole(' Meet quit api 검증 실패');
+            ctx.response.status = 400;
+            return (ctx.body = api.returnBadReqest());
+        }
+    
+        try {
+            // LIST에 값이 있는지 검사
+            const dbResult : any = await Database.query(`SELECT UID FROM LIST WHERE MEET_ID = ${req.meet_id} AND USER_ID = ${req.user_id} `);
+            console.log(dbResult);
+            if (dbResult[0] === undefined) {
+                api.printConsole('Meet Quit 실패 - 해당 미팅에 사용자가 존재하지 않습니다.');
+                ctx.response.status = 403;
+                return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '존재하지 않는 참여 릴레이션 입니다.'));
+            }
+
+            await Database.query(`DELETE FROM LIST WHERE MEET_ID = ${req.meet_id} AND USER_ID = ${req.user_id}`);
+            await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.meet_id}, ${req.user_id}, 00, '[Meeting 퇴장]')`);
+            api.printConsole('Meet quit 성공');
+            return (ctx.body = api.returnSuccessRequest('미팅 퇴장에 성공하였습니다.'));
+        } catch (err: any) {
+            api.printConsole(' Meet quit api DB Insert 오류');
+            ctx.response.status = 400;
+            return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
+        }
+    }
+    // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 미팅 퇴장 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
   public static async test2(ctx: Context) {
     const result: any = await Database.query('SELECT POINT FROM MEET WHERE UID = 15');
