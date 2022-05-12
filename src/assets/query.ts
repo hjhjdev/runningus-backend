@@ -1,4 +1,6 @@
 import { Sql } from 'types/query';
 
-export const findAllUser: Sql = `
+export const testQuery: Sql = `
+    SELECT  *
+    FROM    ${process.env.USER_TABLE};
 `;
