@@ -12,16 +12,21 @@ export class LoginController {
     // const { query } = ctx;
     // const { method } = query;
 
-    // const allowed = [
-    //   {
-    //     name: 'kakao',
-    //     redirect:
-    //       // eslint-disable-next-line max-len
-    //       `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=$
-    // {process.env.REST_API_KEY}&redirect_uri=${REDIRECT_URI}`,
-    //   },
-    // ];
-    // const found = allowed.find((item) => item.name === method);
+    const allowed = [
+      {
+        name: 'kakao',
+        // eslint-disable-next-line max-len
+        redirect: [
+          'https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=',
+          process.env.REST_API_KEY,
+          '&redirect_uri=',
+          process.env.REDIRECT_HOST,
+          '/v1/',
+        ].join(''),
+      },
+    ];
+
+    const found = allowed.find((item) => item.name === method);
 
     // Logger.debug('%o', found);
 
