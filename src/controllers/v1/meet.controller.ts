@@ -59,7 +59,7 @@ class MeetEndReq {
 
 export class MeetingController {
   public static test(ctx: Context) {
-    ctx.body = api.returnBadRequest();
+    ctx.body = api.returnSuccessRequest('테스트 성공');
   }
 
   // ===================================미팅 생성 api=======================================
@@ -155,7 +155,7 @@ export class MeetingController {
         } 
         // MEET 대기상태 검사
         if (dbResult1[0].STATE !== parseInt(process.env.STATUS_INIT, 10) ) {
-          api.printConsole(`Meet Join 실패 - 대기실 참여 실패 [code : ${dbResult1[0].STATE}]`);
+          api.printConsole(`Meet Join 실패 - 대기실 참여 실패 [Meeting State Code : ${dbResult1[0].STATE}]`);
           ctx.response.status = 403;
           return (ctx.body = api.returnBasicRequest(false, ctx.response.status, `대기실 참여 실패 [code : ${dbResult1[0].STATE}]`));
         }
