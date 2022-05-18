@@ -85,8 +85,9 @@ class SocketServer {
 
       // 연결 해제 처리
       socket.on('disconnect', (resason) => {
+        const { userUid } = connection;
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
-        Logger.info(`[SOKT] [EXIT] user uid ${uid}at ${resason}`);
+        Logger.info(`[SOKT] [EXIT] user uid ${userUid} disconnected by ${resason}`);
       });
 
       //   // get user running Info
