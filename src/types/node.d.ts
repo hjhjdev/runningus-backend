@@ -12,10 +12,12 @@ declare global {
       DB_NAME: string;
 
       REST_API_KEY: string;
+      JWT_SECRET: string;
       REDIRECT_URI: string;
 
       LIST_TABLE: string;
       USER_TABLE: string;
+      USER_AUTH_TABLE: string;
       MEET_TABLE: string;
       MEET_HISTORY_TABLE: string;
 

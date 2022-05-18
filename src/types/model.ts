@@ -13,4 +13,12 @@ export interface UserModel {
   POINT?: number;
 }
 
+export interface UserAuthModel {
+  UID?: string;
+  USER_UID?: string;
+  REFRESH_TOKEN: string;
+}
+
 export type findOauthIdReturn = Pick<UserModel, 'UID'>;
+
+export type UserRefreshTokenFindReturn = Required<Pick<UserAuthModel, 'REFRESH_TOKEN' | 'USER_UID'>>;
