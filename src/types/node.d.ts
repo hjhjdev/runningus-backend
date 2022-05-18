@@ -19,6 +19,7 @@ declare global {
       USER_TABLE: string;
       USER_AUTH_TABLE: string;
       MEET_TABLE: string;
+      MEET_LIST_TABLE: string;
       MEET_HISTORY_TABLE: string;
 
       STATUS_INIT: string;
