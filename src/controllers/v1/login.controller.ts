@@ -33,7 +33,7 @@ export class LoginController {
     const { code } = query;
 
     // 쿼리 타입 체크
-    if (typeof code !== 'string') return api.returnBadReqest();
+    if (typeof code !== 'string') return api.returnBadRequest();
 
     Logger.debug('[code]');
     Logger.debug(code);

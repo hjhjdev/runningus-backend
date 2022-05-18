@@ -1,14 +1,18 @@
+/* eslint-disable no-return-assign */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable max-len */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable no-inner-declarations */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable no-restricted-syntax */
+import { Context } from 'koa';
 
 export class apiCall {
   // 서버 콘솔 출력 메소드
   public static printConsole(context: string): void {
     const dt = new Date();
-    const temp = `   ==[server Log] [${dt}] : ${context}`;
+    const temp = `     ==[server Log] [${dt}] : ${context}`;
     console.log(temp);
   }
 
@@ -47,7 +51,7 @@ export class apiCall {
     return result;
   }
 
-  public static returnBadReqest(): object {
+  public static returnBadRequest(): object {
     const result = {
       isSuccess: false,
       code: 400,
@@ -55,4 +59,15 @@ export class apiCall {
     };
     return result;
   }
+
+  // public static sendBasicRequest(isSuccess : boolean, code: number, message : string, consoleMessage : string, ctx : Context ) {
+  //   this.printConsole(consoleMessage); 
+  //   ctx.response.status = code;
+  //   return (ctx.body = this.returnBasicRequest(isSuccess, ctx.response.status, message));
+  // }
+
+  // public static sendBadRequest(consoleMessage : string, ctx : Context ) {
+  //   this.printConsole(consoleMessage); 
+  //   return (ctx.body = this.returnBadRequest());
+  // }
 }
