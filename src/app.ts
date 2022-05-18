@@ -1,5 +1,6 @@
 import '@utilities/environment.util';
 import Koa from 'koa';
+import { createServer } from 'http';
 import bodyParser from 'koa-bodyparser';
 import logger from 'koa-logger';
 import helmet from 'koa-helmet';
@@ -7,22 +8,27 @@ import cors from '@koa/cors';
 import json from 'koa-json';
 import routerV1 from '@routers/v1';
 // import authJwt from '@middlewares/auth-jwt.middleware';
+import { SocketServer } from '@middlewares/socket.middleware';
 import { Logger } from '@utilities/winston-logger.util';
 
-const app = new Koa();
+const httpApp = new Koa();
+const server = createServer(httpApp.callback());
+const webSocketApp = new SocketServer(server);
 const port = process.env.APP_PORT || 6000;
 
 // 미들웨어 등록
-app.use(helmet());
-app.use(cors());
-app.use(json());
-app.use(bodyParser());
-app.use(logger());
-// app.use(authJwt);
-app.use(routerV1.routes());
-app.use(routerV1.allowedMethods());
+httpApp.use(helmet());
+httpApp.use(cors());
+httpApp.use(json());
+httpApp.use(bodyParser());
+httpApp.use(logger());
+// httpApp.use(authJwt);
+httpApp.use(routerV1.routes());
+httpApp.use(routerV1.allowedMethods());
 
-app.listen(port, () => {
+webSocketApp.use(httpApp);
+
+httpApp.listen(port, () => {
   const message = `[SSTM] Runninus_backend listening on the port ${port}`;
   const wrapCharacter = '@'.repeat(message.length);
 
