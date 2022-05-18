@@ -48,7 +48,7 @@ class SocketServer {
         connection.userUid = userUid;
 
         // 방 아이디로 입장
-        const [result] = await Database.query<FindRoombyRoomUidReturn[]>(findMeetByMeetUid, [uid]);
+        const [result] = await Database.query<FindRoombyRoomUidReturn[]>(findMeetByMeetUid, [meetId]);
 
         if (!result) socket.emit('MEET NOT FOUND');
         else {
