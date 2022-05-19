@@ -50,33 +50,41 @@ class SocketServer {
         // 방 아이디로 입장
         const [result] = await Database.query<FindRoombyRoomUidReturn[]>(findMeetByMeetUid, [meetId]);
 
-        if (!result) socket.emit('MEET NOT FOUND');
+        if (!result) socket.emit('MEET_ERROR', { reason: '방이 존재하지 않습니다' });
         else {
           const { STATE, MAX_NUM } = result;
           const findMeetResult = await Database.query<Array<{ USER_ID: string }>>(findMeetUsers, [meetId]);
 
-          if (!STATE) socket.emit('MEET STATUS NOT WAITING(00)');
-          if (MAX_NUM === findMeetResult.length) socket.emit('MEET FULL');
+          if (!STATE) socket.emit('MEET_ERROR', { reason: '이미 시작한 방이거나 정지된 방입니다' });
+          if (MAX_NUM === findMeetResult.length) socket.emit('MEET_ERROR', { reason: '방이 꽉 찼습니다' });
           else {
             socket.join(meetId);
 
             // 미팅 참여 기록 및 현재 방 참여 상태 확인
             await Database.query(addUserMeetLog, [meetId, userUid, '00', new Date()]);
             await Database.query(addUserToMeetList, [meetId, userUid, new Date()]);
+
+            // 접속한 클라이언트에게 입장 알림
+            socket.emit('MEET_CONNECTED', { meetId });
+
+            // 나머지 클라이언트에게 입장 알림
+            socket.to(meetId).emit('USER_IN', { userUid });
           }
         }
       });
 
-      socket.on('ROOM_OUT', async () => {
+      socket.on('MEET_OUT', async () => {
         const { meetId, userUid } = connection;
 
         await Database.query(addUserMeetLog, [meetId, userUid, '80', new Date()]);
         await Database.query(removeUserFromMeetList, [meetId, userUid]);
+
+        // 퇴장 알림
+        socket.emit('MEET_DISCONNECTED', { meetId });
+
+        // 나머지 클라이언트에게 퇴장 알림
+        socket.to(meetId).emit('USER_OUT', { userUid });
       });
-
-      socket.on('ROOM_REFRESH', () => {});
-
-      socket.on('ROOM_UPDATE', () => {});
 
       // 에러 처리
       socket.on('error', (reason) => {
