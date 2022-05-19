@@ -92,7 +92,7 @@ export class MeetingController {
       return (ctx.body = api.returnSuccessRequest('미팅 생성에 성공하였습니다.'));
     } catch (err: any) {
       // API 입력시 Datetime 형식을 따르지 않을 경우 오류
-      api.printConsole(' Meet Create api DB Insert 오류');
+      api.printConsole(`Meet Create api DB Insert 오류 : ${err}`);
       ctx.response.status = 400;
       return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
     }
@@ -132,7 +132,7 @@ export class MeetingController {
       ctx.body = Object.assign(api.returnSuccessRequest('미팅 조회에 성공하였습니다.'), { results: dbResult });
     } catch (err: any) {
       // DB Insertion 오류
-      api.printConsole(' Meet Search api DB Insert 오류');
+      api.printConsole(` Meet Search api DB Insert 오류 : ${err}`);
       ctx.response.status = 400;
       return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
     }
@@ -195,7 +195,7 @@ export class MeetingController {
           results : dbResult1
         });
     } catch (err: any) {
-        api.printConsole(' Meet join api DB Insert 오류');
+        api.printConsole(` Meet join api DB Insert 오류 : ${err}`);
         ctx.response.status = 400;
         return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
     }
@@ -228,7 +228,7 @@ export class MeetingController {
             api.printConsole('Meet quit 성공');
             return (ctx.body = api.returnSuccessRequest('미팅 퇴장에 성공하였습니다.'));
         } catch (err: any) {
-            api.printConsole(' Meet quit api DB Insert 오류');
+            api.printConsole(` Meet quit api DB Insert 오류 : ${err}`);
             ctx.response.status = 400;
             return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
         }
@@ -258,7 +258,7 @@ export class MeetingController {
       return (ctx.body = api.returnSuccessRequest('운동 시작에 성공하였습니다.'));
     }
     catch (err: any) {
-      api.printConsole(' Meet start api DB Insert 오류'); 
+      api.printConsole(` Meet start api DB Insert 오류 : ${err}`); 
       ctx.response.status = 400;
       return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
     }
