@@ -15,4 +15,8 @@ export class meetList {
         if ( parseInt(dbResult[0].CNT, 10) >= max) return true;
         return false;
     }
+
+    // public static async returnUsernameById(uid : number) {
+    //     const dbResult = Database.query('SELECT')
+    // }
 }
