@@ -42,7 +42,7 @@ export class LoginController {
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
       client_id: process.env.REST_API_KEY,
-      redirect_uri: [process.env.REDIRECT_HOST, '/v1/redirect/kakao'].join(''),
+      redirect_uri: [process.env.REDIRECT_URI, '/v1/redirect/kakao'].join(''),
       code,
     });
 
