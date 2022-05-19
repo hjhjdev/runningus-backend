@@ -37,11 +37,9 @@ class SocketServer {
         meetId: '-1',
       };
 
-      //   // 방 uid 로 join
-      //   socket.join(user.id);
-      //   Logger.info(`[SOKT] [JOIN] room ${user.id}, username ${user.username}`);
+      // 하트비트 요청
+      socket.on('PING', () => socket.emit('PONG'));
 
-      // handle toggle event
       socket.on('MEET_IN', async ({ userUid, meetId }: { userUid: string; meetId: string }) => {
         // 방 입장 시 userUid 저장
         // 퇴장 시 사용
