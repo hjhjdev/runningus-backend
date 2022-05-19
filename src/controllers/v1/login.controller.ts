@@ -19,7 +19,7 @@ export class LoginController {
       'https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=',
       process.env.REST_API_KEY,
       '&redirect_uri=',
-      process.env.REDIRECT_HOST,
+      process.env.REDIRECT_URI,
       '/v1/redirect/kakao',
     ].join('');
 
