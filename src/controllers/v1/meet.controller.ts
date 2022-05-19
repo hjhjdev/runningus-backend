@@ -117,7 +117,11 @@ export class MeetingController {
         const point = `POINT(${req.point_y}, ${req.point_x})`;
 
         const dbResult = await Database.query(
-            `SELECT *, ST_DISTANCE_SPHERE(${point}, POINT) AS DIST FROM MEET
+            `SELECT *, ST_DISTANCE_SPHERE(${point}, POINT) AS DIST,
+              (SELECT COUNT(*)
+              FROM LIST
+              WHERE MEET.UID = LIST.MEET_ID) AS NOW_NUM
+            FROM MEET
             WHERE STATE = ${process.env.STATUS_INIT}
             ORDER BY DIST`
             // WHERE st_distance_sphere(Point(127.1210368, 37.3817369), point) < ${MAX_DISTANCE}
@@ -140,14 +144,20 @@ export class MeetingController {
     // api 유효성 검사
     const req = ctx.request.body;
     if (api.checkValidation(new MeetJoinReq(), req) === false) {
-      api.printConsole(' Meet Join api 검증 실패');
+      api.printConsole('Meet Join api 검증 실패');
       ctx.response.status = 400;
       return (ctx.body = api.returnBadRequest());
     }
 
     try {
         // MEET이 존재하는지 검사
-        const dbResult1 : any = await Database.query(`SELECT UID, STATE, MAX_NUM FROM MEET WHERE UID = ${req.meet_id}`);
+        const dbResult1 : any = await Database.query(`
+        SELECT * ,
+        (SELECT COUNT(*) + 1
+          FROM LIST
+          WHERE MEET.UID = LIST.MEET_ID) AS NOW_NUM
+        FROM MEET
+        WHERE UID = ${req.meet_id}`);
         if (dbResult1[0] === undefined) {
           api.printConsole('Meet Join 실패 - 미팅이 존재하지 않습니다.');
           ctx.response.status = 403;
@@ -176,10 +186,14 @@ export class MeetingController {
           return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '대기 인원이 초과하여 입장할 수 없습니다.'));
         }
 
+        // 성공 후 list, meetlog에 값 입력
         await Database.query(`INSERT INTO LIST (MEET_ID, USER_ID) VALUE (${req.meet_id}, ${req.user_id})`);
         await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.user_id}, ${req.meet_id}, 00, '[Meeting 조인]')`,);
         api.printConsole(' Meet Join 성공');
-        return (ctx.body = api.returnSuccessRequest('미팅 참여에 성공하였습니다.'));
+        return (ctx.body = {
+          ...api.returnSuccessRequest("미팅 참여에 성공했습니다."),
+          results : dbResult1
+        });
     } catch (err: any) {
         api.printConsole(' Meet join api DB Insert 오류');
         ctx.response.status = 400;
