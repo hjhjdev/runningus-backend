@@ -272,7 +272,15 @@ export class MeetingController {
   //     if (api.checkValidation(new MeetEndReq(), req) === false) {
   //       api.printConsole(' Meet quit api 검증 실패');
   //       ctx.response.status = 400;
-  //       return (ctx.body = api.returnBadReqest());
+  //       return (ctx.body = api.returnBadRequest());
+  //     }
+
+  //     try {
+  //       const dbResult = await Database.query( `SELECT * FROM MEET WHERE UID = ${req.meet_id}`);
+  //       if (dbResult[0] === undefined ) {
+  //     }
+  //     catch (err) {
+
   //     }
   // }
 
