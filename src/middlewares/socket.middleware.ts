@@ -46,6 +46,7 @@ class SocketServer {
         // 방 입장 시 userUid 저장
         // 퇴장 시 사용
         connection.userUid = userUid;
+        connection.meetId = meetId;
 
         // 방 아이디로 입장
         const [result] = await Database.query<FindRoombyRoomUidReturn[]>(findMeetByMeetUid, [meetId]);
@@ -76,6 +77,12 @@ class SocketServer {
       socket.on('MEET_OUT', async () => {
         const { meetId, userUid } = connection;
 
+        // 이미 나왔는데 또 나간 요청을 보낼 경우
+        if (meetId === '-1') socket.emit('MEET_ALREADY_DISCONNECTED');
+
+        // 퇴장
+        socket.leave(meetId);
+
         await Database.query(addUserMeetLog, [meetId, userUid, '80', new Date()]);
         await Database.query(removeUserFromMeetList, [meetId, userUid]);
 
@@ -84,6 +91,9 @@ class SocketServer {
 
         // 나머지 클라이언트에게 퇴장 알림
         socket.to(meetId).emit('USER_OUT', { userUid });
+
+        // 접속한 meetId 초기화
+        connection.meetId = '-1';
       });
 
       // 에러 처리
