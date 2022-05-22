@@ -26,8 +26,6 @@ httpApp.use(logger());
 httpApp.use(routerV1.routes());
 httpApp.use(routerV1.allowedMethods());
 
-webSocketApp.use(httpApp);
-
 httpApp.listen(port, () => {
   const message = `[SSTM] Runninus_backend listening on the port ${port}`;
   const wrapCharacter = '@'.repeat(message.length);
@@ -36,3 +34,5 @@ httpApp.listen(port, () => {
   Logger.info(message);
   Logger.info(wrapCharacter);
 });
+
+webSocketApp.use(httpApp);
