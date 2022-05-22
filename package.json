@@ -31,7 +31,7 @@
     "mysql2": "^2.3.3",
     "node-fetch": "^3.2.3",
     "qs": "^6.10.3",
-    "socket.io": "^4.5.1",
+    "socket.io": "^2.4.1",
     "uuidv4": "^6.2.12",
     "winston": "^3.6.0",
     "winston-daily-rotate-file": "^4.6.1"
