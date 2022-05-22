@@ -39,6 +39,9 @@ class SocketServer {
         meetId: '-1',
       };
 
+      // 연결 시 TEST emit
+      socket.emit('TEST');
+
       // 하트비트 요청
       socket.on('PING', () => socket.emit('PONG'));
 
