@@ -18,7 +18,6 @@ class SocketServer {
 
   constructor(httpServer: http) {
     this.io = new Server(httpServer /* , { cors: { credentials: true } } */);
-    this.io.path('/socket/');
 
     Logger.info('Socket initialized');
   }
