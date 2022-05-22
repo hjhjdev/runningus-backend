@@ -18,6 +18,8 @@ class SocketServer {
 
   constructor(httpServer: http) {
     this.io = new Server(httpServer /* , { cors: { credentials: true } } */);
+
+    Logger.info('Socket initialized');
   }
 
   use(httpApp: koa) {
