@@ -100,12 +100,12 @@ class SocketServer {
       });
 
       // 에러 처리
-      socket.on('error', (reason: unknown) => {
+      socket.on('error', (reason: any) => {
         Logger.info('[SOKT] [EROR] event: %o', reason);
       });
 
       // 연결 해제 처리
-      socket.on('disconnect', (resason: unknown) => {
+      socket.on('disconnect', (resason: any) => {
         const { userUid } = connection;
         // eslint-disable-next-line @typescript-eslint/restrict-template-expressions
         Logger.info(`[SOKT] [EXIT] user uid ${userUid} disconnected by ${resason}`);
