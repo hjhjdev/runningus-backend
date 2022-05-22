@@ -18,7 +18,7 @@ const port = process.env.APP_PORT || 6000;
 
 // 미들웨어 등록
 httpApp.use(helmet());
-httpApp.use(cors());
+httpApp.use(cors({ origin: '*' }));
 httpApp.use(json());
 httpApp.use(bodyParser());
 httpApp.use(logger());
