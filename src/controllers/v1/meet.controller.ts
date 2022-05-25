@@ -1,3 +1,5 @@
+/* eslint-disable guard-for-in */
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/restrict-template-expressions */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
@@ -15,6 +17,7 @@ import { request } from 'websocket';
 import { apiCall as api } from '@middlewares/api.middleware';
 import { meetList as list} from '@middlewares/meetlist.middleware';
 import { Sql } from 'types/query';
+import { object } from 'joi';
 
 class MeetCreateReq {
   public name = '';
@@ -88,6 +91,12 @@ export class MeetingController {
         `INSERT INTO MEET (NAME, HOST, POINT, MAX_NUM, EX_DISTANCE, EX_START_TIME, EX_END_TIME, LEVEL) VALUE (?, ?, ${point}, ?, ?, ?, ?, ?)`,
         [req.name, req.host, req.max_num, req.ex_distance, req.ex_start_time, req.ex_end_time, req.level],
       );
+    // LIST, MEETLOG에 기록. 방장은 방 생성시 자동으로 방에 참여
+      const meetId : any = await Database.query(`SELECT UID FROM MEET WHERE NAME = "${req.name}"`);
+      console.log(meetId[0].UID);
+      console.log(req.user_id);
+      await Database.query(`INSERT INTO LIST (MEET_ID, USER_ID) VALUE (${meetId[0].UID}, ${req.host})`);
+      await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${meetId[0].UID}, ${req.host}, 00, '[Meeting 조인 - 방 생성]')`,);
       api.printConsole(' Meet Create api 미팅 생성 성공');
       return (ctx.body = api.returnSuccessRequest('미팅 생성에 성공하였습니다.'));
     } catch (err: any) {
@@ -116,17 +125,33 @@ export class MeetingController {
         // const LIMIT = 10
         const point = `POINT(${req.point_y}, ${req.point_x})`;
 
-        const dbResult = await Database.query(
-            `SELECT *, ST_DISTANCE_SPHERE(${point}, POINT) AS DIST,
-              (SELECT COUNT(*)
+        // 방에 참여 유저 닉네임 조회
+        const dbResult : any= await Database.query(
+            `SELECT MEET.*,USER.NICK AS HOST_NICK,
+            ST_DISTANCE_SPHERE(${point}, MEET.POINT) AS DIST,
+            (SELECT COUNT(*)
               FROM LIST
               WHERE MEET.UID = LIST.MEET_ID) AS NOW_NUM
-            FROM MEET
-            WHERE STATE = ${process.env.STATUS_INIT}
-            ORDER BY DIST`
+          FROM MEET LEFT OUTER JOIN USER
+            ON MEET.HOST = USER.UID
+          WHERE STATE = ${process.env.STATUS_INIT}
+          ORDER BY DIST;`
             // WHERE st_distance_sphere(Point(127.1210368, 37.3817369), point) < ${MAX_DISTANCE}
             // LIMIT ${LIMIT}
       );
+
+      // 방에 참여하고 있는 유저의 닉네임 dbResult에 assign
+      for(const index in dbResult) {
+        const dbTempResult = await Database.query(
+          `SELECT USER.UID, USER.NICK 
+          FROM LIST LEFT OUTER JOIN USER
+          ON LIST.USER_ID = USER.UID
+          WHERE LIST.MEET_ID = ${dbResult[index].UID}
+          ORDER BY REG_DATE`
+        );
+
+        Object.assign(dbResult[index], {NOW_USER_INFO : dbTempResult});
+      }
 
       api.printConsole(' Meet Search 성공');
       ctx.body = Object.assign(api.returnSuccessRequest('미팅 조회에 성공하였습니다.'), { results: dbResult });
@@ -152,12 +177,13 @@ export class MeetingController {
     try {
         // MEET이 존재하는지 검사
         const dbResult1 : any = await Database.query(`
-        SELECT * ,
+        SELECT MEET.*, USER.NICK AS HOST_NICK, 
         (SELECT COUNT(*) + 1
           FROM LIST
           WHERE MEET.UID = LIST.MEET_ID) AS NOW_NUM
-        FROM MEET
-        WHERE UID = ${req.meet_id}`);
+        FROM MEET LEFT OUTER JOIN USER
+        ON MEET.HOST = USER.UID
+        WHERE MEET.UID = ${req.meet_id}`);
         if (dbResult1[0] === undefined) {
           api.printConsole('Meet Join 실패 - 미팅이 존재하지 않습니다.');
           ctx.response.status = 403;
@@ -186,9 +212,20 @@ export class MeetingController {
           return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '대기 인원이 초과하여 입장할 수 없습니다.'));
         }
 
-        // 성공 후 list, meetlog에 값 입력
+        // 모든 유효성 검사가 끝났다면 list, meetlog에 값 입력
         await Database.query(`INSERT INTO LIST (MEET_ID, USER_ID) VALUE (${req.meet_id}, ${req.user_id})`);
-        await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.user_id}, ${req.meet_id}, 00, '[Meeting 조인]')`,);
+        await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.meet_id}, ${req.user_id}, 00, '[Meeting 조인]')`,);
+
+        // dbResult1에 참여하고 있는 유저의 닉네임 정보 탐색
+        const dbTempResult = await Database.query(
+          `SELECT USER.UID, USER.NICK 
+          FROM LIST LEFT OUTER JOIN USER
+          ON LIST.USER_ID = USER.UID
+          WHERE LIST.MEET_ID = ${dbResult1[0].UID}
+          ORDER BY REG_DATE`
+        );
+
+        Object.assign(dbResult1[0], {NOW_USER_INFO : dbTempResult})
         api.printConsole(' Meet Join 성공');
         return (ctx.body = {
           ...api.returnSuccessRequest("미팅 참여에 성공했습니다."),
@@ -215,16 +252,32 @@ export class MeetingController {
     
         try {
             // LIST에 값이 있는지 검사
-            const dbResult : any = await Database.query(`SELECT UID FROM LIST WHERE MEET_ID = ${req.meet_id} AND USER_ID = ${req.user_id} `);
+            const query1 = `
+              SELECT LIST.USER_ID, MEET.HOST 
+              FROM LIST LEFT OUTER JOIN MEET
+              ON LIST.MEET_ID = MEET.UID
+              WHERE MEET_ID = ${req.meet_id} AND USER_ID = ${req.user_id}`
+            const dbResult : any = await Database.query(query1);
+
+            // 릴레이션이 존재하는지 조회
             console.log(dbResult);
             if (dbResult[0] === undefined) {
                 api.printConsole('Meet Quit 실패 - 해당 미팅에 사용자가 존재하지 않습니다.');
                 ctx.response.status = 403;
                 return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '존재하지 않는 참여 릴레이션 입니다.'));
             }
-
-            await Database.query(`DELETE FROM LIST WHERE MEET_ID = ${req.meet_id} AND USER_ID = ${req.user_id}`);
-            await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.meet_id}, ${req.user_id}, 00, '[Meeting 퇴장]')`);
+            // 만약 방장이 방을 나간다면 방을 삭제
+            if(dbResult[0].USER_ID === dbResult[0].HOST) {
+              const listId : any = await Database.query(`SELECT * FROM LIST WHERE MEET_ID = ${req.meet_id}`);
+              for(const index in listId) {
+                await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${listId[index].MEET_ID}, ${listId[index].USER_ID}, ${process.env.STATUS_EXIT}, '[Meeting 퇴장 - 방 삭제]')`);
+              }
+              await Database.query(`DELETE FROM MEET WHERE HOST = ${dbResult[0].HOST}`);
+              await Database.query(`DELETE FROM LIST WHERE MEET_ID = ${req.meet_id}`);
+            } else {
+              await Database.query(`DELETE FROM LIST WHERE MEET_ID = ${req.meet_id} AND USER_ID = ${req.user_id}`);
+              await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.meet_id}, ${req.user_id}, ${process.env.STATUS_EXIT}, '[Meeting 퇴장]')`);
+            }
             api.printConsole('Meet quit 성공');
             return (ctx.body = api.returnSuccessRequest('미팅 퇴장에 성공하였습니다.'));
         } catch (err: any) {
