@@ -51,6 +51,15 @@ export class apiCall {
     return result;
   }
 
+  public static returnSuccessRequest202(message: string): object {
+    const result = {
+      isSuccess: true,
+      code: 202,
+      message,
+    };
+    return result;
+  }
+
   public static returnBadRequest(): object {
     const result = {
       isSuccess: false,

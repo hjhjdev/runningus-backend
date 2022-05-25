@@ -128,7 +128,7 @@ export class UserRestController {
             const dbResult1 : any = await Database.query(`SELECT * FROM LIST WHERE USER_ID = ${req.user_id}`);
             if (dbResult1[0] === undefined) {
                 api.printConsole(`유저 초기 확인 성공 - 방 참여 여부 [ false ] [ 유저 id - ${req.user_id} ]`);
-                return ctx.body = api.returnSuccessRequest("유저 초기 확인에 성공하였습니다. 참여중인 방이 없습니다.")
+                return ctx.body = api.returnSuccessRequest202("유저 초기 확인에 성공하였습니다. 참여중인 방이 없습니다.")
             }
 
             const query = `
@@ -155,7 +155,7 @@ export class UserRestController {
             };
 
             api.printConsole(`유저 초기 확인 성공 - 방 참여 여부 [ True ] [ 유저 id - ${req.user_id} ]`);
-            ctx.body = Object.assign(api.returnSuccessRequest('유저 초기 확인에 성공하였습니다.'), { results: dbResult2 });
+            ctx.body = Object.assign(api.returnSuccessRequest('유저 초기 확인에 성공하였습니다. 참여중인 방이 있습니다.'), { results: dbResult2 });
         } 
         catch( err : any ) {
             api.printConsole(` 유저 초기 확인 DB Import 오류 : ${err}`);

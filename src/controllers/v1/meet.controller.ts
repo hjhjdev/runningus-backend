@@ -93,12 +93,10 @@ export class MeetingController {
       );
     // LIST, MEETLOG에 기록. 방장은 방 생성시 자동으로 방에 참여
       const meetId : any = await Database.query(`SELECT UID FROM MEET WHERE NAME = "${req.name}"`);
-      console.log(meetId[0].UID);
-      console.log(req.user_id);
       await Database.query(`INSERT INTO LIST (MEET_ID, USER_ID) VALUE (${meetId[0].UID}, ${req.host})`);
       await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${meetId[0].UID}, ${req.host}, 00, '[Meeting 조인 - 방 생성]')`,);
       api.printConsole(' Meet Create api 미팅 생성 성공');
-      return (ctx.body = api.returnSuccessRequest('미팅 생성에 성공하였습니다.'));
+      return (ctx.body = Object.assign(api.returnSuccessRequest('미팅 생성에 성공하였습니다.'), meetId[0]));
     } catch (err: any) {
       // API 입력시 Datetime 형식을 따르지 않을 경우 오류
       api.printConsole(`Meet Create api DB Insert 오류 : ${err}`);
@@ -274,7 +272,10 @@ export class MeetingController {
               }
               await Database.query(`DELETE FROM MEET WHERE HOST = ${dbResult[0].HOST}`);
               await Database.query(`DELETE FROM LIST WHERE MEET_ID = ${req.meet_id}`);
-            } else {
+            } 
+            // 방장아닌 유저일때 처리
+            else
+             {
               await Database.query(`DELETE FROM LIST WHERE MEET_ID = ${req.meet_id} AND USER_ID = ${req.user_id}`);
               await Database.query(`INSERT INTO MEETLOG (MEET_ID, USER_ID, CODE, CONTENT) VALUE (${req.meet_id}, ${req.user_id}, ${process.env.STATUS_EXIT}, '[Meeting 퇴장]')`);
             }
@@ -335,7 +336,7 @@ export class MeetingController {
   //     catch (err) {
 
   //     }
-  // }
+  // }s
 
   // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 운동 종료 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
