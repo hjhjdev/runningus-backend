@@ -26,7 +26,7 @@ httpApp.use(logger());
 httpApp.use(routerV1.routes());
 httpApp.use(routerV1.allowedMethods());
 
-httpApp.listen(port, () => {
+server.listen(port, () => {
   const message = `[SSTM] Runninus_backend listening on the port ${port}`;
   const wrapCharacter = '@'.repeat(message.length);
 
