@@ -43,7 +43,10 @@ class SocketServer {
       socket.emit('TEST');
 
       // 하트비트 요청
-      socket.on('PING', () => socket.emit('PONG'));
+      socket.on('PING', () => {
+        Logger.info('Client PING');
+        socket.emit('PONG');
+      });
 
       socket.on('MEET_IN', async ({ userUid, meetId }: { userUid: string; meetId: string }) => {
         // 방 입장 시 userUid 저장
