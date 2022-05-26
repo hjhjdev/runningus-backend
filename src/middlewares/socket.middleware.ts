@@ -1,15 +1,17 @@
 import koa from 'koa';
 import { Server } from 'socket.io';
 import { Server as http } from 'http';
-import { authSocket } from '@middlewares/authSocket.middleware';
 import Database from '@libraries/database.lib';
 import { Logger } from '@utilities/winston-logger.util';
 import {
   addUserMeetLog,
-  addUserToMeetList,
   findMeetByMeetUid,
   findMeetUsers,
   removeUserFromMeetList,
+  updateMeetToStart,
+  addMeetLog,
+  updateMeetToEnd,
+  findUsersFromHistory,
 } from '@assets/query';
 import { FindRoombyRoomUidReturn } from 'types/model';
 
@@ -43,60 +45,133 @@ class SocketServer {
       socket.emit('TEST');
 
       // 하트비트 요청
-      socket.on('PING', () => socket.emit('PONG'));
+      socket.on('PING', () => {
+        Logger.info('Client PING: %o', connection);
+        socket.emit('PONG');
+      });
 
-      socket.on('MEET_IN', async ({ userUid, meetId }: { userUid: string; meetId: string }) => {
-        // 방 입장 시 userUid 저장
-        // 퇴장 시 사용
-        connection.userUid = userUid;
-        connection.meetId = meetId;
+      socket.on(
+        'MEET_IN',
+        async ({ userUid, meetId, isRecover }: { userUid: string; meetId: string; isRecover: boolean }) => {
+          Logger.info('MEET_IN: userUid %o, meetId %o', userUid, meetId);
+          // 방 입장 시 userUid 저장
+          // 퇴장 시 사용
+          connection.userUid = userUid;
+          connection.meetId = meetId;
 
-        // 방 아이디로 입장
-        const [result] = await Database.query<FindRoombyRoomUidReturn[]>(findMeetByMeetUid, [meetId]);
+          // 앱이 종료 후 다시시작해 상태를 복구해야 할 경우 조용히 room join
+          if (isRecover) {
+            Logger.info('MEET_IN: isRecover userUid %o, meetId %o', userUid, meetId);
+            return socket.join(meetId);
+          }
 
-        if (!result) socket.emit('MEET_ERROR', { reason: '방이 존재하지 않습니다' });
-        else {
+          // 방 아이디로 입장
+          const [result] = await Database.query<FindRoombyRoomUidReturn[]>(findMeetByMeetUid, [meetId]);
+
+          if (!result) {
+            Logger.info('MEET_IN: userUid %o, meetId %o, 방이 존재하지 않음', userUid, meetId);
+            return socket.emit('MEET_ERROR', { reason: '방이 존재하지 않습니다' });
+          }
+
           const { STATE, MAX_NUM } = result;
           const findMeetResult = await Database.query<Array<{ USER_ID: string }>>(findMeetUsers, [meetId]);
 
-          if (!STATE) socket.emit('MEET_ERROR', { reason: '이미 시작한 방이거나 정지된 방입니다' });
-          if (MAX_NUM === findMeetResult.length) socket.emit('MEET_ERROR', { reason: '방이 꽉 찼습니다' });
-          else {
-            socket.join(meetId);
-
-            // 미팅 참여 기록 및 현재 방 참여 상태 확인
-            await Database.query(addUserMeetLog, [meetId, userUid, '00', new Date()]);
-            await Database.query(addUserToMeetList, [meetId, userUid, new Date()]);
-
-            // 접속한 클라이언트에게 입장 알림
-            socket.emit('MEET_CONNECTED', { meetId });
-
-            // 나머지 클라이언트에게 입장 알림
-            socket.to(meetId).emit('USER_IN', { userUid });
+          if (STATE) {
+            Logger.info('MEET_IN: userUid %o, meetId %o, 이미 시작한 방이거나 정지된 방입니다', userUid, meetId);
+            return socket.emit('MEET_ERROR', { reason: '이미 시작한 방이거나 정지된 방입니다' });
           }
-        }
-      });
+
+          if (MAX_NUM === findMeetResult.length) {
+            Logger.info('MEET_IN: userUid %o, meetId %o, 방이 꽉 찼습니다', userUid, meetId);
+            return socket.emit('MEET_ERROR', { reason: '방이 꽉 찼습니다' });
+          }
+
+          Logger.info('MEET_IN: userUid %o, meetId %o, 참여 완료', userUid, meetId);
+          socket.join(meetId);
+
+          Logger.info('Available socket meets: \n%o', socket.rooms);
+
+          // 미팅 참여 기록 및 현재 방 참여 상태 확인
+          await Database.query(addUserMeetLog, [meetId, userUid, '00', new Date()]);
+          // await Database.query(addUserToMeetList, [meetId, userUid, new Date()]);
+
+          // 접속한 클라이언트에게 입장 알림
+          socket.emit('MEET_CONNECTED', { meetId });
+
+          // 나머지 클라이언트에게 입장 알림
+          return socket.to(meetId).emit('USER_IN', { userUid });
+        },
+      );
 
       socket.on('MEET_OUT', async () => {
         const { meetId, userUid } = connection;
 
         // 이미 나왔는데 또 나간 요청을 보낼 경우
-        if (meetId === '-1') socket.emit('MEET_ALREADY_DISCONNECTED');
+        if (meetId === '-1') {
+          Logger.info('MEET_IN: userUid %o, meetId %o, 이미 나갔거나 또 나가는 요청 보냄', userUid, meetId);
+          socket.emit('MEET_ALREADY_DISCONNECTED');
+        } else {
+          Logger.info('MEET_IN: userUid %o, meetId %o, 퇴장 시도', userUid, meetId);
 
-        // 퇴장
-        socket.leave(meetId);
+          // 퇴장
+          socket.leave(meetId);
 
-        await Database.query(addUserMeetLog, [meetId, userUid, '80', new Date()]);
-        await Database.query(removeUserFromMeetList, [meetId, userUid]);
+          await Database.query(addUserMeetLog, [meetId, userUid, '80', new Date()]);
+          await Database.query(removeUserFromMeetList, [meetId, userUid]);
 
-        // 퇴장 알림
-        socket.emit('MEET_DISCONNECTED', { meetId });
+          // 퇴장 알림
+          socket.emit('MEET_DISCONNECTED', { meetId });
 
-        // 나머지 클라이언트에게 퇴장 알림
-        socket.to(meetId).emit('USER_OUT', { userUid });
+          // 나머지 클라이언트에게 퇴장 알림
+          socket.to(meetId).emit('USER_OUT', { userUid });
 
-        // 접속한 meetId 초기화
-        connection.meetId = '-1';
+          // 접속한 meetId 초기화
+          connection.meetId = '-1';
+
+          Logger.info('MEET_IN: userUid %o, meetId %o, 퇴장 완료', userUid, meetId);
+        }
+      });
+
+      socket.on('MEET_START', async () => {
+        const { meetId } = connection;
+
+        Logger.info('MEET_START SEND %o', meetId);
+
+        socket.to(meetId).emit('RUNNING_START', { status: -1 });
+
+        const date = new Date();
+        const users = await Database.query<Array<{ USER_ID: string }>>(findUsersFromHistory, [meetId, 0]);
+        const meetLogs = users.map((item) => ({
+          MEET_ID: meetId,
+          USER_ID: item.USER_ID,
+          DATE: date,
+          CODE: 30,
+          CONTENT: '[Meeting 시작 - 방 운동 시작]',
+        }));
+
+        await Database.query(addMeetLog, [meetLogs]);
+        await Database.query(updateMeetToStart, [meetId]);
+      });
+
+      socket.on('MEET_END', async () => {
+        const { meetId } = connection;
+
+        Logger.info('MEET_END SEND %o', meetId);
+
+        socket.to(meetId).emit('RUNNING_END', { status: -1 });
+
+        const date = new Date();
+        const users = await Database.query<Array<{ USER_ID: string }>>(findUsersFromHistory, [meetId, 30]);
+        const meetLogs = users.map((item) => ({
+          MEET_ID: meetId,
+          USER_ID: item.USER_ID,
+          DATE: date,
+          CODE: 60,
+          CONTENT: '[Meeting 종료 - 방 운동 끝]',
+        }));
+
+        await Database.query(addMeetLog, [meetLogs]);
+        await Database.query(updateMeetToEnd, [meetId]);
       });
 
       // 에러 처리
