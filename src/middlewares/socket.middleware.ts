@@ -149,7 +149,7 @@ class SocketServer {
           CONTENT: '[Meeting 시작 - 방 운동 시작]',
         }));
 
-        await Database.query(addMeetLog, [meetLogs]);
+        await Database.query(addMeetLog, [[meetLogs]]);
         await Database.query(updateMeetToStart, [meetId]);
       });
 
@@ -170,7 +170,7 @@ class SocketServer {
           CONTENT: '[Meeting 종료 - 방 운동 끝]',
         }));
 
-        await Database.query(addMeetLog, [meetLogs]);
+        await Database.query(addMeetLog, [[meetLogs]]);
         await Database.query(updateMeetToEnd, [meetId]);
       });
 
