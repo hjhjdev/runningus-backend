@@ -84,5 +84,5 @@ export const updateMeetToStart: Sql = `
   SET
     M.CODE = 30
   WHERE
-    MEET_ID=? AND USER_ID=?
+    MEET_ID=?
 `;

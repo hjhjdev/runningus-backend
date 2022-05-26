@@ -134,7 +134,7 @@ class SocketServer {
 
         socket.to(meetId).emit('RUNNING_START', { status: -1 });
 
-        await Database.query(updateMeetToStart, [meetId, userUid]);
+        await Database.query(updateMeetToStart, [meetId]);
       });
 
       // 에러 처리
