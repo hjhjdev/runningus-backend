@@ -65,7 +65,7 @@ class SocketServer {
           const { STATE, MAX_NUM } = result;
           const findMeetResult = await Database.query<Array<{ USER_ID: string }>>(findMeetUsers, [meetId]);
 
-          if (!STATE) {
+          if (STATE) {
             Logger.info('MEET_IN: userUid %o, meetId %o, 이미 시작한 방이거나 정지된 방입니다', userUid, meetId);
             socket.emit('MEET_ERROR', { reason: '이미 시작한 방이거나 정지된 방입니다' });
           } else if (MAX_NUM === findMeetResult.length) {
