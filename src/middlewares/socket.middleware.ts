@@ -132,6 +132,8 @@ class SocketServer {
       socket.on('MEET_START', async () => {
         const { meetId, userUid } = connection;
 
+        Logger.info('MEET_START SEND %o', meetId);
+
         socket.to(meetId).emit('RUNNING_START', { status: -1 });
 
         await Database.query(updateMeetToStart, [meetId]);
