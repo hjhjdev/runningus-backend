@@ -75,6 +75,8 @@ class SocketServer {
             Logger.info('MEET_IN: userUid %o, meetId %o, 참여 완료', userUid, meetId);
             socket.join(meetId);
 
+            Logger.info('Available socket meets: \n%o', socket.rooms);
+
             // 미팅 참여 기록 및 현재 방 참여 상태 확인
             await Database.query(addUserMeetLog, [meetId, userUid, '00', new Date()]);
             // await Database.query(addUserToMeetList, [meetId, userUid, new Date()]);
