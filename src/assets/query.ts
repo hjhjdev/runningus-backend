@@ -95,3 +95,21 @@ export const updateMeetToStart: Sql = `
   WHERE
     UID=?
 `;
+
+export const updateMeetLogToEnd: Sql = `
+  UPDATE
+    ${process.env.MEET_HISTORY_TABLE} AS M
+  SET
+    M.CODE = 30
+  WHERE
+    MEET_ID=?
+`;
+
+export const updateMeetToEnd: Sql = `
+  UPDATE
+    ${process.env.MEET_TABLE} AS M
+  SET
+    M.STATE = 30
+  WHERE
+    UID=?
+`;

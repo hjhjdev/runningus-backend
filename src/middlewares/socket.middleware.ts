@@ -10,6 +10,8 @@ import {
   removeUserFromMeetList,
   updateMeetToStart,
   updateMeetLogToStart,
+  updateMeetLogToEnd,
+  updateMeetToEnd,
 } from '@assets/query';
 import { FindRoombyRoomUidReturn } from 'types/model';
 
@@ -131,7 +133,7 @@ class SocketServer {
       });
 
       socket.on('MEET_START', async () => {
-        const { meetId, userUid } = connection;
+        const { meetId } = connection;
 
         Logger.info('MEET_START SEND %o', meetId);
 
@@ -139,6 +141,17 @@ class SocketServer {
 
         await Database.query(updateMeetLogToStart, [meetId]);
         await Database.query(updateMeetToStart, [meetId]);
+      });
+
+      socket.on('MEET_END', async () => {
+        const { meetId } = connection;
+
+        Logger.info('MEET_END SEND %o', meetId);
+
+        socket.to(meetId).emit('RUNNING_END', { status: -1 });
+
+        await Database.query(updateMeetLogToEnd, [meetId]);
+        await Database.query(updateMeetToEnd, [meetId]);
       });
 
       // 에러 처리
