@@ -9,9 +9,9 @@ import {
   findMeetUsers,
   removeUserFromMeetList,
   updateMeetToStart,
-  updateMeetLogToStart,
-  updateMeetLogToEnd,
+  addMeetLog,
   updateMeetToEnd,
+  findUsersFromHistory,
 } from '@assets/query';
 import { FindRoombyRoomUidReturn } from 'types/model';
 
@@ -139,7 +139,17 @@ class SocketServer {
 
         socket.to(meetId).emit('RUNNING_START', { status: -1 });
 
-        await Database.query(updateMeetLogToStart, [meetId]);
+        const date = new Date();
+        const users = await Database.query<Array<{ USER_ID: string }>>(findUsersFromHistory, [meetId, 0]);
+        const meetLogs = users.map((item) => ({
+          MEET_ID: meetId,
+          USER_ID: item.USER_ID,
+          DATE: date,
+          CODE: 30,
+          CONTENT: '[Meeting 시작 - 방 운동 시작]',
+        }));
+
+        await Database.query(addMeetLog, [meetLogs]);
         await Database.query(updateMeetToStart, [meetId]);
       });
 
@@ -150,7 +160,17 @@ class SocketServer {
 
         socket.to(meetId).emit('RUNNING_END', { status: -1 });
 
-        await Database.query(updateMeetLogToEnd, [meetId]);
+        const date = new Date();
+        const users = await Database.query<Array<{ USER_ID: string }>>(findUsersFromHistory, [meetId, 30]);
+        const meetLogs = users.map((item) => ({
+          MEET_ID: meetId,
+          USER_ID: item.USER_ID,
+          DATE: date,
+          CODE: 60,
+          CONTENT: '[Meeting 종료 - 방 운동 끝]',
+        }));
+
+        await Database.query(addMeetLog, [meetLogs]);
         await Database.query(updateMeetToEnd, [meetId]);
       });
 

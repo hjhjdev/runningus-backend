@@ -70,6 +70,15 @@ export const findMeetUsers: Sql = `
     MLT.MEET_ID = ?
 `;
 
+export const findUsersFromHistory: Sql = `
+  SELECT
+    USER_ID
+  FROM
+    ${process.env.MEET_HISTORY_TABLE} AS M
+  WHERE
+    M.MEET_ID = ? AND M.CODE = ?
+`;
+
 export const removeUserFromMeetList: Sql = `
   DELETE FROM
     ${process.env.LIST_TABLE} AS MLT
@@ -78,13 +87,10 @@ export const removeUserFromMeetList: Sql = `
     AND MLT.USER_ID = ?
 `;
 
-export const updateMeetLogToStart: Sql = `
-  UPDATE
-    ${process.env.MEET_HISTORY_TABLE} AS M
-  SET
-    M.CODE = 30
-  WHERE
-    MEET_ID=?
+export const addMeetLog: Sql = `
+  INSERT INTO
+    ${process.env.MEET_HISTORY_TABLE} (MEET_ID, USER_ID, DATE, CODE, CONTENT)
+  VALUES (?)
 `;
 
 export const updateMeetToStart: Sql = `
@@ -94,15 +100,6 @@ export const updateMeetToStart: Sql = `
     M.STATE = 30
   WHERE
     UID=?
-`;
-
-export const updateMeetLogToEnd: Sql = `
-  UPDATE
-    ${process.env.MEET_HISTORY_TABLE} AS M
-  SET
-    M.CODE = 60
-  WHERE
-    MEET_ID=?
 `;
 
 export const updateMeetToEnd: Sql = `
