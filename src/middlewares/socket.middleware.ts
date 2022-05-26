@@ -44,7 +44,7 @@ class SocketServer {
 
       // 하트비트 요청
       socket.on('PING', () => {
-        Logger.info('Client PING');
+        Logger.info('Client PING: %o', connection);
         socket.emit('PONG');
       });
 
