@@ -179,7 +179,7 @@ export class UserRestController {
 
         // 닉네임 반환
         api.printConsole(`유저 닉네임 리턴 성공 - [ 유저 id - ${req.user_id} ] [ 유저 닉네임 - ${dbResult[0].NICK}]`);
-        ctx.body = Object.assign(api.returnSuccessRequest('유저 닉네임 리턴에 성공했습니다.'), dbResult[0]);
+        ctx.body = Object.assign(api.returnSuccessRequest('유저 닉네임 리턴에 성공했습니다.'), {results: dbResult[0]});
     }
 
     // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 유저 초기 확인 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
