@@ -8,5 +8,6 @@ const UserRestRouter = new Router();
 UserRestRouter.post('/user/inquire', (ctx) => UserRestController.userInq(ctx));
 UserRestRouter.post('/user/update', (ctx) => UserRestController.userUpdate(ctx));
 UserRestRouter.post('/user/check', (ctx) => UserRestController.userListCheck(ctx));
+UserRestRouter.post('/user/nick', (ctx) => UserRestController.userNickReturn(ctx));
 
 export { UserRestRouter };

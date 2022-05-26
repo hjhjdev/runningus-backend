@@ -17,7 +17,7 @@ import { apiCall as api } from '@middlewares/api.middleware';
 import { meetList as list} from '@middlewares/meetlist.middleware';
 import { Sql } from 'types/query';
 
-class UserInqReq {
+class UserIdReq {
     public user_id = 0;
 }
 
@@ -31,11 +31,6 @@ class UserAltReq {
     public user_sex = 0;
 
     public user_address = '';
-}
-
-class UserListCheckReq {
-    public user_id = 0;
-
 }
 
 
@@ -52,7 +47,7 @@ export class UserRestController {
     public static async userInq(ctx : Context) {
         // api 유효성 검사
         const req = ctx.request.body;
-        if (api.checkValidation(new UserInqReq(), req) === false) {
+        if (api.checkValidation(new UserIdReq(), req) === false) {
             api.printConsole(' 유저 정보 조회 api 검증 실패');
             ctx.response.status = 400;
             return (ctx.body = api.returnBadRequest());
@@ -117,7 +112,7 @@ export class UserRestController {
     public static async userListCheck (ctx : Context) {
         // api 유효성 검사
         const req = ctx.request.body;
-        if (api.checkValidation(new UserListCheckReq(), req) === false) {
+        if (api.checkValidation(new UserIdReq(), req) === false) {
             api.printConsole(' 유저 초기 확인 api 검증 실패');
             ctx.response.status = 400;
             return (ctx.body = api.returnBadRequest());
@@ -163,7 +158,30 @@ export class UserRestController {
             return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
         }      
     }
-    // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 유저 초기 확인 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
+    // ===================================유저 초기 확인 api 시작 =======================================
 
+    public static async userNickReturn (ctx : Context) {
+         // api 유효성 검사
+        const req = ctx.request.body;
+        if (api.checkValidation(new UserIdReq(), req) === false) {
+            api.printConsole(' 유저 초기 확인 api 검증 실패');
+            ctx.response.status = 400;
+            return (ctx.body = api.returnBadRequest());
+        }
+
+        // 유저가 있는지 확인
+        const dbResult : any = await Database.query(`SELECT NICK FROM USER WHERE UID = ${req.user_id}`);
+        if(dbResult[0] === undefined) {
+            api.printConsole(`유저 닉네임 리턴 실패 - userId : ${req.user_id}인 유저 존재하지 않음`);
+            ctx.response.status = 403;
+            return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '유저가 존재하지 않습니다.'));
+        }
+
+        // 닉네임 반환
+        api.printConsole(`유저 닉네임 리턴 성공 - [ 유저 id - ${req.user_id} ] [ 유저 닉네임 - ${dbResult[0].NICK}]`);
+        ctx.body = Object.assign(api.returnSuccessRequest('유저 닉네임 리턴에 성공했습니다.'), dbResult[0]);
+    }
+
+    // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 유저 초기 확인 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
 }
