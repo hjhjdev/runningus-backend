@@ -143,7 +143,9 @@ class SocketServer {
         const users = await Database.query<Array<{ USER_ID: string }>>(findUsersFromHistory, [meetId, 0]);
         const meetLogs = users.map((item) => [meetId, item.USER_ID, date, 30, '[Meeting 시작 - 방 운동 시작]']);
 
-        await Database.query(addMeetLog, [meetLogs]);
+        if (meetLogs.length) await Database.query(addMeetLog, [meetLogs]);
+        else Logger.info('no meetLogs in MEET_START');
+
         await Database.query(updateMeetToStart, [meetId]);
       });
 
@@ -158,7 +160,9 @@ class SocketServer {
         const users = await Database.query<Array<{ USER_ID: string }>>(findUsersFromHistory, [meetId, 30]);
         const meetLogs = users.map((item) => [meetId, item.USER_ID, date, 60, '[Meeting 종료 - 방 운동 끝]']);
 
-        await Database.query(addMeetLog, [meetLogs]);
+        if (meetLogs.length) await Database.query(addMeetLog, [meetLogs]);
+        else Logger.info('no meetLogs in MEET_END');
+
         await Database.query(updateMeetToEnd, [meetId]);
       });
 
