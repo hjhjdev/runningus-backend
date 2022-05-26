@@ -90,7 +90,7 @@ export const removeUserFromMeetList: Sql = `
 export const addMeetLog: Sql = `
   INSERT INTO
     ${process.env.MEET_HISTORY_TABLE} (MEET_ID, USER_ID, DATE, CODE, CONTENT)
-  VALUES (?)
+  VALUES ?
 `;
 
 export const updateMeetToStart: Sql = `
