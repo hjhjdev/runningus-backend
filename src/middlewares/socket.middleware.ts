@@ -9,6 +9,7 @@ import {
   findMeetUsers,
   removeUserFromMeetList,
   updateMeetToStart,
+  updateMeetLogToStart,
 } from '@assets/query';
 import { FindRoombyRoomUidReturn } from 'types/model';
 
@@ -136,6 +137,7 @@ class SocketServer {
 
         socket.to(meetId).emit('RUNNING_START', { status: -1 });
 
+        await Database.query(updateMeetLogToStart, [meetId]);
         await Database.query(updateMeetToStart, [meetId]);
       });
 

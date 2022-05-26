@@ -78,11 +78,20 @@ export const removeUserFromMeetList: Sql = `
     AND MLT.USER_ID = ?
 `;
 
-export const updateMeetToStart: Sql = `
+export const updateMeetLogToStart: Sql = `
   UPDATE
     ${process.env.MEET_HISTORY_TABLE} AS M
   SET
     M.CODE = 30
   WHERE
     MEET_ID=?
+`;
+
+export const updateMeetToStart: Sql = `
+  UPDATE
+    ${process.env.MEET_TABLE} AS M
+  SET
+    M.STATE = 30
+  WHERE
+    UID=?
 `;
