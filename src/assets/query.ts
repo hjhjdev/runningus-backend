@@ -51,7 +51,7 @@ export const addUserMeetLog: Sql = `
   INSERT INTO
     ${process.env.MEET_HISTORY_TABLE} (MEET_ID, USER_ID, CODE, DATE)
   VALUES
-    (?, ?, ?)
+    (?, ?, ?, ?)
 `;
 
 export const addUserToMeetList: Sql = `
