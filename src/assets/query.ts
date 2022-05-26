@@ -100,7 +100,7 @@ export const updateMeetLogToEnd: Sql = `
   UPDATE
     ${process.env.MEET_HISTORY_TABLE} AS M
   SET
-    M.CODE = 30
+    M.CODE = 60
   WHERE
     MEET_ID=?
 `;
@@ -109,7 +109,7 @@ export const updateMeetToEnd: Sql = `
   UPDATE
     ${process.env.MEET_TABLE} AS M
   SET
-    M.STATE = 30
+    M.STATE = 60
   WHERE
     UID=?
 `;
