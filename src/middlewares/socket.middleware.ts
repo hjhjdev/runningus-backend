@@ -85,7 +85,7 @@ class SocketServer {
             socket.emit('MEET_CONNECTED', { meetId });
 
             // 나머지 클라이언트에게 입장 알림
-            socket.to(meetId).emit('USER_IN', { userUid });
+            this.io.to(meetId).emit('USER_IN', { userUid });
           }
         }
       });
@@ -110,7 +110,7 @@ class SocketServer {
           socket.emit('MEET_DISCONNECTED', { meetId });
 
           // 나머지 클라이언트에게 퇴장 알림
-          socket.to(meetId).emit('USER_OUT', { userUid });
+          this.io.to(meetId).emit('USER_OUT', { userUid });
 
           // 접속한 meetId 초기화
           connection.meetId = '-1';
