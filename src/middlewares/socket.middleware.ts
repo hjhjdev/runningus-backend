@@ -69,7 +69,7 @@ class SocketServer {
 
             // 미팅 참여 기록 및 현재 방 참여 상태 확인
             await Database.query(addUserMeetLog, [meetId, userUid, '00', new Date()]);
-            await Database.query(addUserToMeetList, [meetId, userUid, new Date()]);
+            // await Database.query(addUserToMeetList, [meetId, userUid, new Date()]);
 
             // 접속한 클라이언트에게 입장 알림
             socket.emit('MEET_CONNECTED', { meetId });
