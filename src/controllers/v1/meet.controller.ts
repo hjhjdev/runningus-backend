@@ -345,31 +345,38 @@ export class MeetingController {
     // api 유효성 검사
     const req = ctx.request.body;
     if (api.checkValidation(new MeetStartReq(), req) === false) {
-      api.printConsole(' Meet start api 검증 실패');
+      api.printConsole(' searchOnMeetingUser api 검증 실패');
       ctx.response.status = 400;
       return (ctx.body = api.returnBadRequest());
     }
-
     try {
       const selectOnMeetingUserQuery : any = `
-                                            SELECT USER.UID, USER.NAME
+                                            SELECT USER.UID, USER.NICK 
                                             FROM LIST 
                                               LEFT OUTER JOIN USER
                                                 ON LIST.USER_ID = USER.UID
                                             WHERE LIST.MEET_ID = ?
                                               ORDER BY USER.UID
                                             `;
-                                      
-    const onMeetingUserResult: any = await Database.query(selectOnMeetingUserQuery, req.meet_id);
+      const onMeetingUserResult: any = await Database.query(selectOnMeetingUserQuery, req.meet_id);
 
-    if (onMeetingUserResult[0] === undefined) {
-      api.printConsole('Meeting 중 유저 조회 실패');
-      ctx.response.status = 403;
-      return (ctx.body = api.returnBasicRequest(false, ctx.response.status, 'Meeting 중 유저가 존재하지 않습니다.'));
-    } 
+      // 클라이언트로부터 받은 meet_id를 사용하는 meeting이 존재하지 않을 때
+      if (onMeetingUserResult[0] === undefined) {
+        api.printConsole('Meeting 조회 실패');
+        ctx.response.status = 403;
+        return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '해당 Meeting이 존재하지 않습니다.'));
+      }
 
-    api.printConsole('Meeting 중 유저 조회 성공');
-    return (ctx.body = Object.assign(api.returnSuccessRequest('방 참가중 유저 조회에 성공하였습니다'), {results: onMeetingUserResult}));
+      // meeting에 사용자가 존재하지 않을 때
+      if (onMeetingUserResult[0].UID === null) {
+        api.printConsole('Meeting 참가중 유저 조회 실패');
+        ctx.response.status = 403;
+        return (ctx.body = api.returnBasicRequest(false, ctx.response.status, '해당 Meeting에 참가하고있는 사용자가 없습니다.'));
+      }
+
+      // meeting에 존재하는 사용자 검색에 성공했을 때
+      api.printConsole('Meeting 중 유저 조회 성공');
+      return (ctx.body = Object.assign(api.returnSuccessRequest('방 Meeting에 참여중인 유저 조회에 성공하였습니다'), {results: onMeetingUserResult}));
 
     } catch (err : any) {
       api.printConsole(` Meeting 중 유저 조회 오류 : ${err}`);
