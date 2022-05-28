@@ -340,6 +340,7 @@ export class MeetingController {
 
   // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 운동 종료 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
+  // ===================================미팅 중인 사용자 조회 api========================================
   public static async searchOnMeetingUser(ctx: Context){
     // api 유효성 검사
     const req = ctx.request.body;
@@ -376,6 +377,7 @@ export class MeetingController {
       return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
     }
   }
+  // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 미팅 중인 사용자 조회 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
   
   public static async test2(ctx: Context) {
     const result: any = await Database.query('SELECT POINT FROM MEET WHERE UID = 15');
