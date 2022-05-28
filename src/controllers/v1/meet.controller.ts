@@ -340,6 +340,43 @@ export class MeetingController {
 
   // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+= 운동 종료 api 끝 +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
+  public static async searchOnMeetingUser(ctx: Context){
+    // api 유효성 검사
+    const req = ctx.request.body;
+    if (api.checkValidation(new MeetStartReq(), req) === false) {
+      api.printConsole(' Meet start api 검증 실패');
+      ctx.response.status = 400;
+      return (ctx.body = api.returnBadRequest());
+    }
+
+    try {
+      const selectOnMeetingUserQuery : any = `
+                                            SELECT USER.UID, USER.NAME
+                                            FROM LIST 
+                                              LEFT OUTER JOIN USER
+                                                ON LIST.USER_ID = USER.UID
+                                            WHERE LIST.MEET_ID = ?
+                                              ORDER BY USER.UID
+                                            `;
+                                      
+    const onMeetingUserResult: any = await Database.query(selectOnMeetingUserQuery, req.meet_id);
+
+    if (onMeetingUserResult[0] === undefined) {
+      api.printConsole('Meeting 중 유저 조회 실패');
+      ctx.response.status = 403;
+      return (ctx.body = api.returnBasicRequest(false, ctx.response.status, 'Meeting 중 유저가 존재하지 않습니다.'));
+    } 
+
+    api.printConsole('Meeting 중 유저 조회 성공');
+    return (ctx.body = Object.assign(api.returnSuccessRequest('방 참가중 유저 조회에 성공하였습니다'), {results: onMeetingUserResult}));
+
+    } catch (err : any) {
+      api.printConsole(` Meeting 중 유저 조회 오류 : ${err}`);
+      ctx.response.status = 400;
+      return (ctx.body = api.returnBasicRequest(false, ctx.response.status, err.message));
+    }
+  }
+  
   public static async test2(ctx: Context) {
     const result: any = await Database.query('SELECT POINT FROM MEET WHERE UID = 15');
     console.log(result[0]);

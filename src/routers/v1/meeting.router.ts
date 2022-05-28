@@ -11,6 +11,8 @@ MeetingRouter.post('/meet/search', (ctx) => MeetingController.searchMeeting(ctx)
 MeetingRouter.post('/meet/join', (ctx) => MeetingController.joinMeeting(ctx));
 MeetingRouter.post('/meet/quit', (ctx) => MeetingController.quitMeeting(ctx));
 MeetingRouter.post('/meet/start', (ctx) => MeetingController.startMeeting(ctx));
+MeetingRouter.post('/meet/user', (ctx) => MeetingController.searchOnMeetingUser(ctx));
+
 
 
 export { MeetingRouter };
