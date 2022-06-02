@@ -43,8 +43,10 @@ export class LoginController {
     // 카카오 인증 서버 쿼리
     const body = new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: process.env.REST_API_KEY,
-      redirect_uri: [process.env.REDIRECT_URI, '/v1/redirect/kakao'].join(''),
+      //client_id: process.env.REST_API_KEY,
+      client_id: process.env.JOOON_REST_API_KEY,
+      //redirect_uri: [process.env.REDIRECT_URI, '/v1/redirect/kakao'].join(''),
+      redirect_uri: [process.env.JOOON_REDIRECT_URI, '/v1/redirect/kakao'].join(''),
       code,
     });
 
