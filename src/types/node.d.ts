@@ -11,6 +11,9 @@ declare global {
       DB_PASS: string;
       DB_NAME: string;
 
+      JOOON_REST_API_KEY: string;
+      JOOON_REDIRECT_URI: string;
+      
       REST_API_KEY: string;
       JWT_SECRET: string;
       REDIRECT_URI: string;

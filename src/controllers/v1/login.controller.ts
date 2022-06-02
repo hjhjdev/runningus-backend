@@ -17,9 +17,11 @@ export class LoginController {
 
     const url = [
       'https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=',
-      process.env.REST_API_KEY,
+      process.env.JOOON_REST_API_KEY,
+      //process.env.REST_API_KEY,
       '&redirect_uri=',
-      process.env.REDIRECT_URI,
+      process.env.JOOON_REDIRECT_URI,
+      //process.env.REDIRECT_URI,
       '/v1/redirect/kakao',
     ].join('');
 
@@ -76,8 +78,8 @@ export class LoginController {
 
     // eslint-disable-next-line no-return-assign
     return (ctx.body = {
-      ...api.returnSuccessRequest('로그인을 계속 진행 하세요.'),
-      results: {
+        ...api.returnSuccessRequest('로그인을 계속 진행 하세요.'),
+        results: {
         uid: insertId,
       },
     });
